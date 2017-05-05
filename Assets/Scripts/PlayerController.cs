@@ -8,6 +8,12 @@ public class PlayerController : MonoBehaviour
     public float walkSpeed = 1.0f;
     [Range(1,10)]
     public int dashFrames = 2;//how many frames it takes to complete the dash
+    [Range(1,10)]
+    public float jumpHeight = 3.0f;//how high he can jump when not dashing
+    [Range(0.1f,5)]
+    public float jumpTime = 0.1f;//how much time it should take to jump the full height
+    [Range(0.1f,5)]
+    public float jumpThreshold = 2.0f;//how much above sprite the targetPos must be to activate jump
     public bool useStreak = false;
     [Header("Objects")]
     public GameObject teleportStreak;
@@ -16,7 +22,7 @@ public class PlayerController : MonoBehaviour
 
     //Processing Variables
     private bool grounded = true;//set in isGrounded()
-    private Vector3 gravityVector = new Vector3(0, 0);//the direction of gravity pull (for calculating grounded state)
+    private Vector3 gravityVector = Vector2.down;//the direction of gravity pull (for calculating grounded state)
     private Vector3 sideVector = new Vector3(0, 0);//the direction perpendicular to the gravity direction (for calculating grounded state)
     private float halfWidth = 0;//half of Merky's sprite width
     private int removeVelocityFrames = 0;
@@ -45,7 +51,7 @@ public class PlayerController : MonoBehaviour
                 rb2d.velocity = Vector2.zero;
             }
         }
-        if (grounded && !rb2d.isKinematic && !isMoving())
+        if (isGrounded() && !isMoving())
         {
             mainCamCtr.discardMovementDelay();
         }
@@ -147,9 +153,8 @@ public class PlayerController : MonoBehaviour
 
     bool isGrounded()
     {
-        bool isgrounded = isGrounded(gravityVector);
-        grounded = isgrounded;
-        return isgrounded;
+        grounded = isGrounded(gravityVector);
+        return grounded;
     }
     bool isGrounded(Vector3 direction)
     {
@@ -240,10 +245,6 @@ public class PlayerController : MonoBehaviour
                 }
 
             }
-            //if (go.tag.Equals("HidableArea") || (go.transform.parent != null && go.transform.parent.gameObject.tag.Equals("HideableArea")))
-            //{
-            //    return true;//yep, it's occupied by a hidden area
-            //}
         }
         return pos + moveDir;//not adjusted because there's nothing to adjust for
     }
@@ -277,7 +278,19 @@ public class PlayerController : MonoBehaviour
         //Run towards the position
         if (!finished)
         {
-            rb2d.velocity = (gpos - transform.position).normalized * walkSpeed;
+            float velX = 0;
+            float velY = 0;
+            Vector2 direction = (gpos - transform.position);
+            velX = direction.normalized.x * walkSpeed;
+            if (Mathf.Abs(rb2d.velocity.x) >= walkSpeed)
+            {
+                velX = 0;
+            }
+            if (direction.y > jumpThreshold && grounded)
+            {
+                velY = jumpHeight / (jumpTime * jumpThreshold);
+            }
+            rb2d.velocity = rb2d.velocity + new Vector2(velX, velY);
         }
         else
         {
