@@ -6,6 +6,8 @@ public class PlayerController : MonoBehaviour
     [Header("Settings")]
     [Range(1,10)]
     public float walkSpeed = 1.0f;
+    [Range(1,10)]
+    public int dashFrames = 2;//how many frames it takes to complete the dash
     public bool useStreak = false;
     [Header("Objects")]
     public GameObject teleportStreak;
@@ -35,10 +37,10 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        if (removeVelocityFrames > 0)
+        if (removeVelocityFrames >= 0)
         {
             removeVelocityFrames--;
-            if (removeVelocityFrames == 0)
+            if (removeVelocityFrames < 0)
             {
                 rb2d.velocity = Vector2.zero;
             }
@@ -74,14 +76,14 @@ public class PlayerController : MonoBehaviour
         float distance = Vector3.Distance(oldPos, newPos);
         RaycastHit2D[] rch2ds = new RaycastHit2D[1];
         pc2d.Cast(direction, rch2ds, distance, true);
-        if (rch2ds[0])
+        if (rch2ds[0] && rch2ds[0].collider.gameObject.GetComponent<Rigidbody2D>() == null)
         {
             distance = rch2ds[0].distance;
             newPos = oldPos + direction.normalized * distance;
         }
-        float dashSpeed = distance / Time.deltaTime;
+        float dashSpeed = distance / (Time.deltaTime*dashFrames);
         rb2d.velocity = direction.normalized * dashSpeed;
-        removeVelocityFrames = 2;
+        removeVelocityFrames = dashFrames;
         showTeleportEffect(oldPos, newPos);
         if (playSound)
         {
