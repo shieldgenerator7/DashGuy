@@ -14,6 +14,7 @@ public class PlayerController : MonoBehaviour
     public float jumpTime = 0.1f;//how much time it should take to jump the full height
     [Range(0.1f,5)]
     public float jumpThreshold = 2.0f;//how much above sprite the targetPos must be to activate jump
+    public Vector2 spawnPoint = Vector2.zero;//where the player respawns when he dies
     public bool useStreak = false;
     [Header("Objects")]
     public GameObject teleportStreak;
@@ -82,7 +83,9 @@ public class PlayerController : MonoBehaviour
         float distance = Vector3.Distance(oldPos, newPos);
         RaycastHit2D[] rch2ds = new RaycastHit2D[1];
         pc2d.Cast(direction, rch2ds, distance, true);
-        if (rch2ds[0] && rch2ds[0].collider.gameObject.GetComponent<Rigidbody2D>() == null)
+        if (rch2ds[0]
+            && rch2ds[0].collider.gameObject.GetComponent<Rigidbody2D>() == null
+            && !rch2ds[0].collider.isTrigger)
         {
             distance = rch2ds[0].distance;
             newPos = oldPos + direction.normalized * distance;
@@ -247,6 +250,21 @@ public class PlayerController : MonoBehaviour
             }
         }
         return pos + moveDir;//not adjusted because there's nothing to adjust for
+    }
+    /// <summary>
+    /// Sets the spawn point to the given position
+    /// </summary>
+    /// <param name="newSpawnPoint"></param>
+    public void setSpawnPoint(Vector2 newSpawnPoint)
+    {
+        spawnPoint = newSpawnPoint;
+    }
+    /// <summary>
+    /// Kills the player and sends him back to spawn
+    /// </summary>
+    public void kill()
+    {
+        transform.position = spawnPoint;
     }
     
     /// <summary>
