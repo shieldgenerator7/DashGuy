@@ -12,11 +12,14 @@ public class PlayerController : MonoBehaviour
     [Header("Sounds")]
     public AudioClip teleportSound;
 
+    //Processing Variables
     private bool grounded = true;//set in isGrounded()
     private Vector3 gravityVector = new Vector3(0, 0);//the direction of gravity pull (for calculating grounded state)
     private Vector3 sideVector = new Vector3(0, 0);//the direction perpendicular to the gravity direction (for calculating grounded state)
     private float halfWidth = 0;//half of Merky's sprite width
+    private int removeVelocityFrames = 0;
     
+    //Components
     private CameraController mainCamCtr;//the camera controller for the main camera
     private Rigidbody2D rb2d;
     private BoxCollider2D pc2d;
@@ -32,6 +35,14 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (removeVelocityFrames > 0)
+        {
+            removeVelocityFrames--;
+            if (removeVelocityFrames == 0)
+            {
+                rb2d.velocity = Vector2.zero;
+            }
+        }
         if (grounded && !rb2d.isKinematic && !isMoving())
         {
             mainCamCtr.discardMovementDelay();
@@ -59,7 +70,18 @@ public class PlayerController : MonoBehaviour
 
         //Actually Teleport
         Vector3 oldPos = transform.position;
-        transform.position = newPos;
+        Vector3 direction = newPos - oldPos;
+        float distance = Vector3.Distance(oldPos, newPos);
+        RaycastHit2D[] rch2ds = new RaycastHit2D[1];
+        pc2d.Cast(direction, rch2ds, distance, true);
+        if (rch2ds[0])
+        {
+            distance = rch2ds[0].distance;
+            newPos = oldPos + direction.normalized * distance;
+        }
+        float dashSpeed = distance / Time.deltaTime;
+        rb2d.velocity = direction.normalized * dashSpeed;
+        removeVelocityFrames = 2;
         showTeleportEffect(oldPos, newPos);
         if (playSound)
         {
@@ -68,7 +90,6 @@ public class PlayerController : MonoBehaviour
         //Momentum Dampening
         if (rb2d.velocity.magnitude > 0.001f)//if Merky is moving
         {
-            Vector3 direction = newPos - oldPos;
             float newX = rb2d.velocity.x;//the new x velocity
             float newY = rb2d.velocity.y;
             if (Mathf.Sign(rb2d.velocity.x) != Mathf.Sign(direction.x))
