@@ -312,7 +312,7 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            rb2d.velocity =  new Vector2(0, rb2d.velocity.y);
+            rb2d.velocity =  new Vector2(0, 0);
         }
     }
     public void dropHoldGesture()
