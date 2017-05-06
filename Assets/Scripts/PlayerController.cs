@@ -50,6 +50,7 @@ public class PlayerController : MonoBehaviour
             if (removeVelocityFrames < 0)
             {
                 rb2d.velocity = Vector2.zero;
+                rb2d.gravityScale = 1;
             }
         }
         if (isGrounded() && !isMoving())
@@ -82,16 +83,17 @@ public class PlayerController : MonoBehaviour
         Vector3 direction = newPos - oldPos;
         float distance = Vector3.Distance(oldPos, newPos);
         RaycastHit2D[] rch2ds = new RaycastHit2D[1];
-        pc2d.Cast(direction, rch2ds, distance, true);
-        if (rch2ds[0]
-            && rch2ds[0].collider.gameObject.GetComponent<Rigidbody2D>() == null
-            && !rch2ds[0].collider.isTrigger)
+        rch2ds = Physics2D.RaycastAll(transform.position, direction, distance);
+        if (rch2ds.Length > 1 && rch2ds[1]
+            && rch2ds[1].collider.gameObject.GetComponent<Rigidbody2D>() == null
+            && !rch2ds[1].collider.isTrigger)
         {
-            distance = rch2ds[0].distance;
+            distance = rch2ds[1].distance;
             newPos = oldPos + direction.normalized * distance;
         }
         float dashSpeed = distance / (Time.deltaTime*dashFrames);
         rb2d.velocity = direction.normalized * dashSpeed;
+        rb2d.gravityScale = 0;
         removeVelocityFrames = dashFrames;
         showTeleportEffect(oldPos, newPos);
         if (playSound)
@@ -282,7 +284,6 @@ public class PlayerController : MonoBehaviour
         Vector3 prevPos = transform.position;
         Vector3 newPos = gpos;
         teleport(newPos);
-        mainCamCtr.checkForAutoMovement(gpos, prevPos);
     }
     public void processTapGesture(GameObject checkPoint)
     {
