@@ -308,11 +308,11 @@ public class PlayerController : MonoBehaviour
             {
                 velY = jumpHeight / (jumpTime * jumpThreshold);
             }
-            rb2d.velocity = rb2d.velocity + new Vector2(velX, velY);
+            rb2d.velocity = new Vector2(velX, rb2d.velocity.y + velY);
         }
         else
         {
-            rb2d.velocity = new Vector2(0, rb2d.velocity.y);
+            rb2d.velocity =  new Vector2(0, rb2d.velocity.y);
         }
     }
     public void dropHoldGesture()
